@@ -9,6 +9,7 @@ ARG asciidoctor_diagram_version=1.5.19
 ARG asciidoctor_epub3_version=1.5.0.alpha.9
 ARG asciidoctor_mathematical_version=0.3.1
 ARG asciidoctor_revealjs_version=2.0.0
+ARG mermaid_cli_version=0.5.1
 
 ENV ASCIIDOCTOR_VERSION=${asciidoctor_version} \
   ASCIIDOCTOR_CONFLUENCE_VERSION=${asciidoctor_confluence_version} \
@@ -16,7 +17,8 @@ ENV ASCIIDOCTOR_VERSION=${asciidoctor_version} \
   ASCIIDOCTOR_DIAGRAM_VERSION=${asciidoctor_diagram_version} \
   ASCIIDOCTOR_EPUB3_VERSION=${asciidoctor_epub3_version} \
   ASCIIDOCTOR_MATHEMATICAL_VERSION=${asciidoctor_mathematical_version} \
-  ASCIIDOCTOR_REVEALJS_VERSION=${asciidoctor_revealjs_version}
+  ASCIIDOCTOR_REVEALJS_VERSION=${asciidoctor_revealjs_version} \
+  MERMAID_CLI_VERSION=${mermaid_cli_version}
 
 # Installing package required for the runtime of
 # any of the asciidoctor-* functionnalities
@@ -79,6 +81,23 @@ RUN apk add --no-cache --virtual .pythonmakedepends \
     nwdiag \
     seqdiag \
   && apk del -r --no-cache .pythonmakedepends
+
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+COPY puppeteer.json /etc
+
+# Installing NodeJS dependencies for additional
+# functionnalities as diagrams and chromium headless
+RUN apk add --no-cache \
+      chromium \
+      freetype \
+      freetype-dev \
+      harfbuzz \
+      nodejs \
+      nss \
+      ttf-freefont \
+      yarn \
+  && yarn global add mermaid.cli@0.5.1 \
+  && echo "alias mmdc='mmdc -p /etc/puppeteer.json'" > /etc/profile.d/mmdc
 
 WORKDIR /documents
 VOLUME /documents
